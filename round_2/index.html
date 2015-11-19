@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Weather to Arduino test</title>
+	<link rel="stylesheet" type="text/css" href="style/style.css">
+	<script src="http://insertIPHere:8000/socket.io/socket.io.js"></script><!-- add ip -->
+
+</head>
+<body>
+	<div class="currentTemp">
+		<div class="box">
+			<div class="temperature">
+				94°
+			</div>
+		</div>
+		<button id= "send" onclick= "sendTemp()"> send Temp to serial </button>
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="js/main.js"></script>
+	<script>
+	var socket = io.connect('http://insertIPHere:8000');//add ip
+	var APIKey = '4ef35b52b2813bcf';
+
+
+	var loadWeather = function(response){
+
+		if(response.response.error){
+			alert(response.response.error.description);
+			return;
+		}
+
+		var temp = response.current_observation.feelslike_f + '°';
+
+		console.log('The temperature in New York feels like ' + temp);
+
+		$('.temperature').text(temp);
+
+	};
+
+
+
+	var getWeather = function(){
+
+		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+
+		$.ajax({
+			url : thisURL,
+			dataType : "jsonp",
+			success : function(response){
+				loadWeather(response);
+			}
+		});
+
+	};
+
+	var sendWeather = function(response){
+
+		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+
+		$.ajax({
+			url : thisURL,
+			dataType : "jsonp",
+			success : function(response){
+				var currentTemp = response.current_observation.feelslike_f;
+				var windSpeed = response.current_observation.wind_mph;
+				var precip = response.current_observation.precip_today_metric;
+				socket.emit('weather', { temp: currentTemp, wind: windSpeed, rain: precip });
+			}
+		});
+
+
+	};
+
+
+	var init = function(){
+
+		getWeather();
+
+		var sendButton = document.getElementById("send");
+
+		sendButton.addEventListener('click', function(e){
+
+			e.preventDefault();
+			console.log('now emitting!');
+			sendWeather();
+
+		});
+
+	};
+
+
+	$( document ).ready(function(){
+
+		init();
+
+	});
+	</script>
+
+</body>
+</html>
