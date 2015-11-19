@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<title>Weather to Arduino test</title>
 	<link rel="stylesheet" type="text/css" href="style/style.css">
-	<script src="http://insertIPHere:8000/socket.io/socket.io.js"></script><!-- add ip -->
+	<script src="http://~IP~:8000/socket.io/socket.io.js"></script><!-- add ip -->
 
 </head>
 <body>
@@ -14,13 +14,13 @@
 				94°
 			</div>
 		</div>
-		<button id= "send" onclick= "sendTemp()"> send Temp to serial </button>
+		<button id= "send"> send Temp to serial </button>
 	</div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<script src="js/main.js"></script>
 	<script>
-	var socket = io.connect('http://insertIPHere:8000');//add ip
+	var socket = io.connect('http://~IP~:8000');//add ip
 	var APIKey = '4ef35b52b2813bcf';
 
 
@@ -57,17 +57,24 @@
 
 	var sendWeather = function(response){
 
-		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
 
 		$.ajax({
 			url : thisURL,
 			dataType : "jsonp",
 			success : function(response){
-				var currentTemp = response.current_observation.feelslike_f;
-				var windSpeed = response.current_observation.wind_mph;
-				var precip = response.current_observation.precip_today_metric;
-				socket.emit('weather', { temp: currentTemp, wind: windSpeed, rain: precip });
-			}
+				// var currentTemp = response.current_observation.feelslike_f;
+				// var windSpeed = response.current_observation.wind_mph;
+				// var precip = response.current_observation.precip_today_metric;
+				// socket.emit('weather', { temp: currentTemp, wind: windSpeed, rain: precip });
+				//full response debug
+				var forecast = response['forecast']['txt_forecast']['forecastday'];
+				for (index in forecast) {
+					var possOfPrecip = forecast[index]['pop'];
+					socket.emit('weather', {all: possOfPrecip });
+				}
+
+				}
 		});
 
 

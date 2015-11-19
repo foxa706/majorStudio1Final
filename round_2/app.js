@@ -51,10 +51,12 @@ io.sockets.on('connection', function (socket) {
   });//end port
 
   socket.on('weather', function (data) {
-    console.log("temp is: " + data.temp);
-    console.log("wind speed is: " + data.wind);
-    console.log("rain is: " + data.rain);
-
+    // console.log("temp is: " + data.temp);
+    // console.log("wind speed is: " + data.wind);
+    // console.log("rain is: " + data.rain);
+     // var dataArray = data.all;
+     // var todayData= dataArray[index];
+     console.log(data.all);
 
   });
 
