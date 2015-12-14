@@ -41,23 +41,23 @@ io.sockets.on('connection', function (socket) {
   } else {
     console.log('Serial open');
 
-    socket.on('open', function () {
-      console.log(data.temp);
+
+  socket.on('weather1', function (data) {
+    console.log("chance of rain is: " + data.pop + " %");
+
+    ////send the info out the port to the Arduino
+    // port.write("T"+data.temp + " W"+ data.wind + "R"+ data.rain+" \n");
+
+  });
+
+    socket.on('weather2', function (data) {
+    console.log("temp is: " + data.temp);
+
 
   });
 
   }//end else
 
   });//end port
-
-  socket.on('weather', function (data) {
-    // console.log("temp is: " + data.temp);
-    // console.log("wind speed is: " + data.wind);
-    // console.log("rain is: " + data.rain);
-     // var dataArray = data.all;
-     // var todayData= dataArray[index];
-     console.log(data.all);
-
-  });
 
   });//socket on end Bracket

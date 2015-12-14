@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<title>Weather to Arduino test</title>
 	<link rel="stylesheet" type="text/css" href="style/style.css">
-	<script src="http://~IP~:8000/socket.io/socket.io.js"></script><!-- add ip -->
+	<script src="http://~IP~HERE~:8000/socket.io/socket.io.js"></script>
 
 </head>
 <body>
@@ -14,17 +14,17 @@
 				94°
 			</div>
 		</div>
-		<button id= "send"> send Temp to serial </button>
+		<button id= "send"> test </button>
 	</div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-	<script src="js/main.js"></script>
+	<!--<script src="js/main.js"></script>-->
 	<script>
-	var socket = io.connect('http://~IP~:8000');//add ip
+	var socket = io.connect('http://~IP~HERE~:8000');
 	var APIKey = '4ef35b52b2813bcf';
 
 
-	var loadWeather = function(response){
+	var loadTemp = function(response){
 
 		if(response.response.error){
 			alert(response.response.error.description);
@@ -37,11 +37,12 @@
 
 		$('.temperature').text(temp);
 
+
 	};
 
 
 
-	var getWeather = function(){
+	var getTemp = function(){
 
 		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
 
@@ -49,33 +50,65 @@
 			url : thisURL,
 			dataType : "jsonp",
 			success : function(response){
-				loadWeather(response);
+				loadTemp(response);
 			}
 		});
 
 	};
 
-	var sendWeather = function(response){
+	// var loadPop = function(response){
 
-		var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
+	// 	if(response.response.error){
+	// 		alert(response.response.error.description);
+	// 		return;
+	// 	}
+
+	// 	var temp = response.current_observation.feelslike_f + '°';
+
+	// 	console.log('The temperature in New York feels like ' + temp);
+
+	// 	$('.temperature').text(temp);
+
+
+	// };
+
+	// var getPop = function(){
+
+	// 	var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
+	// 	$.ajax({
+	// 		url : thisURL,
+	// 		dataType : "jsonp",
+	// 		success : function(response){
+	// 			loadPop(response);
+	// 		}
+	// 	});
+
+	// };
+
+	var sendWeather = function(response){
+		var tempURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+		var popURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
 
 		$.ajax({
-			url : thisURL,
+			url : popURL,
 			dataType : "jsonp",
 			success : function(response){
-				// var currentTemp = response.current_observation.feelslike_f;
-				// var windSpeed = response.current_observation.wind_mph;
-				// var precip = response.current_observation.precip_today_metric;
-				// socket.emit('weather', { temp: currentTemp, wind: windSpeed, rain: precip });
-				//full response debug
-				var forecast = response['forecast']['txt_forecast']['forecastday'];
-				for (index in forecast) {
-					var possOfPrecip = forecast[index]['pop'];
-					socket.emit('weather', {all: possOfPrecip });
-				}
 
-				}
+				var forecast = response['forecast']['txt_forecast']['forecastday'];
+				var possOfPrecip = forecast[0]['pop'];
+				socket.emit('weather1', { pop: possOfPrecip });
+			}
 		});
+
+		$.ajax({
+			url : tempURL,
+			dataType : "jsonp",
+			success : function(response){
+				var currentTemp = response.current_observation.feelslike_f;
+				socket.emit('weather2', { temp: currentTemp });
+			}
+		});
+
 
 
 	};
@@ -83,7 +116,8 @@
 
 	var init = function(){
 
-		getWeather();
+		getTemp();
+		// getPop();
 
 		var sendButton = document.getElementById("send");
 
