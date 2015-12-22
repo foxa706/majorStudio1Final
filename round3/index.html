@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>BODE</title>
+    <link rel="stylesheet" type="text/css" href="style/style.css">
+    <script src="http://192.168.0.100:80/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+
+</head>
+<body>
+    <div class="currentTemp">
+        <div class="box">
+            <div class="temperature">
+                94
+            </div>
+            <div class="precip">
+                0
+            </div>
+
+        </div>
+<!--        <button id= "send"> debug </button> -->
+    </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script>
+    var net = require('net');
+
+    var HOST = '192.168.0.102';
+    var PORT = 255;
+
+    var client = new net.Socket();
+
+    var socket = io.connect('http://192.168.0.100:80');
+    var APIKey = '4ef35b52b2813bcf';
+
+    var pop;
+    var temp;
+
+
+    var loadTemp = function(response){
+
+      if(response.response.error){
+         alert(response.response.error.description);
+         return;
+     }
+
+    temp = response.current_observation.feelslike_f;
+
+     console.log('The temperature in New York feels like ' + temp);
+
+     $('.temperature').text(temp);
+
+
+ };
+
+
+
+ var getTemp = function(){
+
+  var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+
+  $.ajax({
+     url : thisURL,
+     dataType : "jsonp",
+     success : function(response){
+        loadTemp(response);
+    }
+});
+
+};
+
+var loadPop = function(response){
+
+  if(response.response.error){
+     alert(response.response.error.description);
+     return;
+    }
+
+    var forecast = response['forecast']['txt_forecast']['forecastday'];
+    pop = forecast[0]['pop'];
+
+    console.log('The chance of rain in New York is ' + pop + "%");
+
+    $('.precip').text(pop);
+
+};
+
+var getPop = function(){
+
+  var thisURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
+  $.ajax({
+     url : thisURL,
+     dataType : "jsonp",
+     success : function(response){
+        loadPop(response);
+    }
+});
+
+};
+
+var sendWeather = function(response){
+  var tempURL = 'http://api.wunderground.com/api/' + APIKey + '/conditions/q/NY/New_York.json';
+  var popURL = 'http://api.wunderground.com/api/' + APIKey + '/forecast/q/NY/New_York.json';
+
+  $.ajax({
+     url : popURL,
+     dataType : "jsonp",
+     success : function(response){
+
+        var forecast = response['forecast']['txt_forecast']['forecastday'];
+        var possOfPrecip = forecast[0]['pop'];
+        socket.emit('weather1', { pop: possOfPrecip });
+    }
+});
+
+  $.ajax({
+     url : tempURL,
+     dataType : "jsonp",
+     success : function(response){
+        var currentTemp = response.current_observation.feelslike_f;
+        socket.emit('weather2', { temp: currentTemp });
+    }
+});
+};//end send weather
+
+
+
+var init = function(){
+
+  getTemp();
+  getPop();
+
+    client.connect(PORT, HOST, function(pop, temp) {
+
+    console.log('CONNECTED TO: ' + HOST + ':' + PORT);
+    client.write(pop, temp);
+
+});
+
+// data is what the server sent to this socket
+client.on('data', function(data) {
+
+    console.log('BODE: ' + data);
+    client.destroy();
+
+});
+
+
+client.on('close', function() {
+    console.log('Connection closed');
+});
+
+  var sendButton = document.getElementById("send");
+
+  sendButton.addEventListener('click', function(e){
+
+     e.preventDefault();
+     console.log('site accessed');
+     sendWeather();
+ });
+
+};
+
+
+$( document ).ready(function(){
+
+  init();
+
+});
+</script>
+
+</body>
+</html>
